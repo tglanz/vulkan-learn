@@ -1,0 +1,1 @@
+g++ -m64 -L./lib -LC:\VulkanSDK\1.1.73.0\Lib -I./include -IC:\VulkanSDK\1.1.73.0\Include -o ./bin/vk.exe ./src/*.cpp -lglfw3 -lgdi32 -lvulkan-1
