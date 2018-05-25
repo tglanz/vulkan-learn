@@ -1,33 +1,46 @@
 #include "App.h"
 
-VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT *pCallback)
-{
-    auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-    if (func != nullptr)
-    {
-        return func(instance, pCreateInfo, pAllocator, pCallback);
-    }
-    else
-    {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-void DestroyDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackEXT callback, const VkAllocationCallbacks * pAllocator)
-{
-    auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-    
-    if (func != nullptr)
-    {
-        func(instance, callback, pAllocator);
-    }
-}
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char *layerPrefix, const char *msg, void *userData)
+VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugReportFlagsEXT flags, 
+    VkDebugReportObjectTypeEXT objType, 
+    uint64_t obj, 
+    size_t location, 
+    int32_t code, 
+    const char *layerPrefix, 
+    const char *msg, 
+    void *userData)
 {
     printf("Validation layer: %s\n", msg);
-
     return VK_FALSE;
+}
+
+void validateLayersAreSupported(const std::vector<const char *> &layerNames)
+{
+    uint32_t supportedLayerCount;
+    vkEnumerateInstanceLayerProperties(&supportedLayerCount, nullptr);
+
+    std::vector<VkLayerProperties> supportedLayers(supportedLayerCount);
+    vkEnumerateInstanceLayerProperties(&supportedLayerCount, supportedLayers.data());
+
+    for (auto layerName : layerNames)
+    {
+        bool isFound = false;
+        for (auto supportedLayer : supportedLayers)
+        {
+            if (strcmp(layerName, supportedLayer.layerName))
+            {
+                isFound = true;
+                break;
+            }
+        }
+
+        if (!isFound)
+        {
+            char buffer[254];
+            sprintf(buffer, "Unsupported layer: %s", layerName);
+            throw std::runtime_error(buffer);
+        }
+    }
 }
 
 void App::run()
@@ -77,9 +90,9 @@ void App::cleanup()
 {
     printf("App::cleanup\n");
 
-    if (ENABLE_VALIDATION_LAYERS)
+    if (m_isEnableValidationLayers)
     {
-        DestroyDebugReportCallbackEXT(m_vkInstance, m_debugReportCallback, nullptr);
+        DestroyDebugReportCallbackEXT(m_vkInstance, m_vkDebugReportCallback, nullptr);
     }
 
     vkDestroyInstance(m_vkInstance, nullptr);
@@ -106,22 +119,15 @@ void App::createVulkanInstance()
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
 
-    printf("Glfw extensions\n");
-    for (const char *extension : extensions)
-    {
-        printf(" - %s\n", extension);
-    }
-
-    if (!ENABLE_VALIDATION_LAYERS)
+    if (!m_isEnableValidationLayers)
     {
         instanceCreateInfo.enabledLayerCount = 0;
     }
     else
     {
-        checkValidationLayersSupport();
-
-        instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(VALIDATION_LAYERS.size());
-        instanceCreateInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
+        validateLayersAreSupported(m_validationLayers);
+        instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+        instanceCreateInfo.ppEnabledLayerNames = m_validationLayers.data();
     }
 
     if (vkCreateInstance(&instanceCreateInfo, nullptr, &m_vkInstance) != VK_SUCCESS)
@@ -129,40 +135,9 @@ void App::createVulkanInstance()
         throw std::runtime_error("Failed to create vulkan instance");
     }
 
-    if (ENABLE_VALIDATION_LAYERS)
+    if (m_isEnableValidationLayers)
     {
         setupDebugCallback();
-    }
-}
-
-void App::checkValidationLayersSupport()
-{
-    uint32_t layersCount;
-    vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
-
-    std::vector<VkLayerProperties> layers(layersCount);
-    vkEnumerateInstanceLayerProperties(&layersCount, layers.data());
-
-    printf("Checking for validation layers support\n");
-    for (const char *layerName : VALIDATION_LAYERS)
-    {
-        bool layerFound = false;
-
-        for (VkLayerProperties layerProperties : layers)
-        {
-            if (strcmp(layerProperties.layerName, layerName))
-            {
-                layerFound = true;
-                break;
-            }
-        }
-
-        printf(" - %s : %s\n", layerName, layerFound ? "supported" : "not supported");
-
-        if (!layerFound)
-        {
-            throw std::runtime_error("Missing validation layer support");
-        }
     }
 }
 
@@ -177,7 +152,7 @@ std::vector<const char *> App::getRequiredExtensions()
         extensions.push_back(glfwExtensions[idx]);
     }
 
-    if (ENABLE_VALIDATION_LAYERS)
+    if (m_isEnableValidationLayers)
     {
         extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     }
@@ -192,7 +167,7 @@ void App::setupDebugCallback()
     createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
     createInfo.pfnCallback = debugCallback;
 
-    if (CreateDebugReportCallbackEXT(m_vkInstance, &createInfo, nullptr, &m_debugReportCallback) != VK_SUCCESS)
+    if (CreateDebugReportCallbackEXT(m_vkInstance, &createInfo, nullptr, &m_vkDebugReportCallback) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to set up debug callback!");
     }

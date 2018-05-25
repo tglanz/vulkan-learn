@@ -6,7 +6,7 @@
         {
             "label": "compile",
             "type": "shell",
-            "command": "g++ -g -m64 -L./lib -LC:/VulkanSDK/1.1.73.0/Lib -I./include -IC:/VulkanSDK/1.1.73.0/Include -o ./bin/vk.exe ./src/*.cpp -lglfw3 -lgdi32 -lvulkan-1",
+            "command": "g++ -g -m64 -L./lib -LC:/VulkanSDK/1.1.73.0/Lib -I./include -IC:/VulkanSDK/1.1.73.0/Include -o ./bin/vk.exe ./src/VulkanExtensions/*.cpp ./src/*.cpp -lglfw3 -lgdi32 -lvulkan-1",
             "group": {
                 "kind": "build",
                 "isDefault": true,

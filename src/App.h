@@ -8,6 +8,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <glfw/glfw3.h>
 
+#include "VulkanExtensions/DebugReportCallbackEXT.h"
+
 class App
 {
 public:
@@ -16,14 +18,16 @@ public:
 private:
   const int WIDTH = 800;
   const int HEIGHT = 600;
-  const bool ENABLE_VALIDATION_LAYERS = true;
 
-  const std::vector<const char *> VALIDATION_LAYERS = {
-      "VK_LAYER_LUNARG_standard_validation"};
+  const bool m_isEnableValidationLayers = true;
+
+  const std::vector<const char *> m_validationLayers = {
+      "VK_LAYER_LUNARG_standard_validation"
+  };
 
   GLFWwindow *m_window;
   VkInstance m_vkInstance;
-  VkDebugReportCallbackEXT m_debugReportCallback;
+  VkDebugReportCallbackEXT m_vkDebugReportCallback;
 
   void initWindow();
   void initVulkan();
@@ -31,7 +35,6 @@ private:
   void cleanup();
 
   void createVulkanInstance();
-  void checkValidationLayersSupport();
   std::vector<const char *> getRequiredExtensions();
   void setupDebugCallback();
 };
