@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <cstdio>
 
 #define GLFW_INCLUDE_VULKAN
@@ -15,9 +16,12 @@ class App
     const int HEIGHT = 600;
 
     GLFWwindow * m_window;
+    VkInstance m_vkInstance;
 
     void initWindow();
     void initVulkan();
     void mainLoop();
     void cleanup();
+
+    void createVulkanInstance();
 };
