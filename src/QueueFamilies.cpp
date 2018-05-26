@@ -1,6 +1,6 @@
 #include "QueueFamilies.h"
 
-QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice)
+QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface)
 {
     QueueFamilyIndicies queueFamilyIndicies;
     
@@ -20,6 +20,13 @@ QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice)
             {
                 queueFamilyIndicies.graphics = idx;                
             }
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, idx, surface, &presentSupport);
+            if (presentSupport)
+            {
+                queueFamilyIndicies.present = idx;
+            }
         }
     }
 
@@ -29,5 +36,6 @@ QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice)
 bool areAllQueueFamiliesFound(QueueFamilyIndicies &queueFamilyIndicies)
 {
     return
-        queueFamilyIndicies.graphics != -1;
+        queueFamilyIndicies.graphics != -1 &&
+        queueFamilyIndicies.present != -1;
 }

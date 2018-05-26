@@ -43,9 +43,9 @@ void validateLayersAreSupported(const std::vector<const char *> &layerNames)
     }
 }
 
-bool isPhysicalDeviceSuitable(VkPhysicalDevice &physicalDevice)
+bool isPhysicalDeviceSuitable(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface)
 {
-    QueueFamilyIndicies queueFamilyIndicies = findQueueFamilies(physicalDevice);
+    QueueFamilyIndicies queueFamilyIndicies = findQueueFamilies(physicalDevice, surface);
     return areAllQueueFamiliesFound(queueFamilyIndicies);
 }
 
@@ -82,8 +82,10 @@ void App::initVulkan()
     printf("App::initVulkan - start\n");
 
     createVulkanInstance();
-    pickPhysicalDevice();
+    createSurface();
     setupDebugCallback();
+    pickPhysicalDevice();
+    createLogicalDevice();
 
     printf("App::initVulkan - finish\n");
 }
@@ -105,6 +107,8 @@ void App::cleanup()
         DestroyDebugReportCallbackEXT(m_vkInstance, m_vkDebugReportCallback, nullptr);
     }
 
+    vkDestroyDevice(m_vkDevice, nullptr);
+    vkDestroySurfaceKHR(m_vkInstance, m_vkSurfaceKHR, nullptr);
     vkDestroyInstance(m_vkInstance, nullptr);
 
     glfwDestroyWindow(m_window);
@@ -151,14 +155,17 @@ std::vector<const char *> App::getRequiredExtensions()
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
+    printf("Required extensions\n");
     std::vector<const char *> extensions;
     for (int idx = 0; idx < glfwExtensionCount; ++idx)
     {
+        printf(" - %s\n", glfwExtensions[idx]);
         extensions.push_back(glfwExtensions[idx]);
     }
 
     if (m_isEnableValidationLayers)
     {
+        printf(" - %s\n", VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     }
 
@@ -185,6 +192,8 @@ void App::setupDebugCallback()
 
 void App::pickPhysicalDevice()
 {
+    printf("App::pickPhysicalDevice - start\n");
+
     uint32_t physicalDeviceCount;
     vkEnumeratePhysicalDevices(m_vkInstance, &physicalDeviceCount, nullptr);
 
@@ -203,7 +212,7 @@ void App::pickPhysicalDevice()
         vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
         printf(" - %s\n", physicalDeviceProperties.deviceName);
 
-        if (isPhysicalDeviceSuitable(physicalDevice))
+        if (isPhysicalDeviceSuitable(physicalDevice, m_vkSurfaceKHR))
         {
             printf("  - Device suitable\n");
             m_vkPhysicalDevice = physicalDevice;
@@ -214,4 +223,61 @@ void App::pickPhysicalDevice()
     {
         throw std::runtime_error("Unable to find a suitable device");
     }
+
+    printf("App::pickPhysicalDevice - finish\n");
+}
+
+void App::createLogicalDevice()
+{
+    printf("App::createLogicalDevice - start\n");
+
+    QueueFamilyIndicies queueFamilyInicies = findQueueFamilies(m_vkPhysicalDevice, m_vkSurfaceKHR);
+
+    VkDeviceQueueCreateInfo graphicsDeviceQueueCreateInfo = {};
+    graphicsDeviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    graphicsDeviceQueueCreateInfo.queueCount = 1;
+    graphicsDeviceQueueCreateInfo.queueFamilyIndex = queueFamilyInicies.graphics;
+    float queuePriorities = 1.0f;
+    graphicsDeviceQueueCreateInfo.pQueuePriorities = &queuePriorities;
+
+    VkPhysicalDeviceFeatures physicalDeviceFeatures = {};
+
+    VkDeviceCreateInfo deviceCreateInfo = {};
+    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceCreateInfo.queueCreateInfoCount = 1;
+    deviceCreateInfo.pQueueCreateInfos = &graphicsDeviceQueueCreateInfo;
+    deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
+    deviceCreateInfo.enabledExtensionCount = 0;
+
+    if (!m_isEnableValidationLayers)
+    {
+        deviceCreateInfo.enabledLayerCount = 0;
+    }
+    else
+    {
+        deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+        deviceCreateInfo.ppEnabledLayerNames = m_validationLayers.data();
+    }
+
+    VkResult createDeviceResult = vkCreateDevice(m_vkPhysicalDevice, &deviceCreateInfo, nullptr, &m_vkDevice);
+    if (createDeviceResult != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create logical device");
+    }
+
+    vkGetDeviceQueue(m_vkDevice, queueFamilyInicies.graphics, 0, &m_vkGraphicsQueue);
+
+    printf("App::createLogicalDevice - finish\n");
+}
+
+void App::createSurface()
+{
+    printf("App::createSurface - start\n");
+
+    if (glfwCreateWindowSurface(m_vkInstance, m_window, nullptr, &m_vkSurfaceKHR) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create window surface");
+    }
+
+    printf("App::createSurface - finish\n");
 }

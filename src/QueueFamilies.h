@@ -6,8 +6,9 @@
 
 struct QueueFamilyIndicies
 {
-    uint32_t graphics = -1;
+    int graphics = -1;
+    int present = -1;
 };
 
-QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice);
+QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &vkSurface);
 bool areAllQueueFamiliesFound(QueueFamilyIndicies &queueFamilyIndicies);
