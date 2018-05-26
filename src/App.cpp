@@ -45,7 +45,8 @@ void validateLayersAreSupported(const std::vector<const char *> &layerNames)
 
 bool isPhysicalDeviceSuitable(VkPhysicalDevice &physicalDevice)
 {
-    return true;
+    QueueFamilyIndicies queueFamilyIndicies = findQueueFamilies(physicalDevice);
+    return areAllQueueFamiliesFound(queueFamilyIndicies);
 }
 
 void App::run()

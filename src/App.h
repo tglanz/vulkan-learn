@@ -9,6 +9,7 @@
 #include <glfw/glfw3.h>
 
 #include "VulkanExtensions/DebugReportCallbackEXT.h"
+#include "QueueFamilies.h"
 
 class App
 {
