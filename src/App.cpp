@@ -1,13 +1,13 @@
 #include "App.h"
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugReportFlagsEXT flags, 
-    VkDebugReportObjectTypeEXT objType, 
-    uint64_t obj, 
-    size_t location, 
-    int32_t code, 
-    const char *layerPrefix, 
-    const char *msg, 
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objType,
+    uint64_t obj,
+    size_t location,
+    int32_t code,
+    const char *layerPrefix,
+    const char *msg,
     void *userData)
 {
     printf("Validation layer: %s\n", msg);
@@ -43,6 +43,11 @@ void validateLayersAreSupported(const std::vector<const char *> &layerNames)
     }
 }
 
+bool isPhysicalDeviceSuitable(VkPhysicalDevice &physicalDevice)
+{
+    return true;
+}
+
 void App::run()
 {
     printf("App::run\n");
@@ -73,9 +78,13 @@ void App::initWindow()
 
 void App::initVulkan()
 {
-    printf("App::initVulkan\n");
+    printf("App::initVulkan - start\n");
 
     createVulkanInstance();
+    pickPhysicalDevice();
+    setupDebugCallback();
+
+    printf("App::initVulkan - finish\n");
 }
 
 void App::mainLoop()
@@ -134,11 +143,6 @@ void App::createVulkanInstance()
     {
         throw std::runtime_error("Failed to create vulkan instance");
     }
-
-    if (m_isEnableValidationLayers)
-    {
-        setupDebugCallback();
-    }
 }
 
 std::vector<const char *> App::getRequiredExtensions()
@@ -162,6 +166,11 @@ std::vector<const char *> App::getRequiredExtensions()
 
 void App::setupDebugCallback()
 {
+    if (!m_isEnableValidationLayers)
+    {
+        return;
+    }
+
     VkDebugReportCallbackCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
@@ -169,6 +178,39 @@ void App::setupDebugCallback()
 
     if (CreateDebugReportCallbackEXT(m_vkInstance, &createInfo, nullptr, &m_vkDebugReportCallback) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to set up debug callback!");
+        throw std::runtime_error("Failed to set up debug callback");
+    }
+}
+
+void App::pickPhysicalDevice()
+{
+    uint32_t physicalDeviceCount;
+    vkEnumeratePhysicalDevices(m_vkInstance, &physicalDeviceCount, nullptr);
+
+    if (physicalDeviceCount == 0)
+    {
+        throw std::runtime_error("No physical devices");
+    }
+
+    std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+    vkEnumeratePhysicalDevices(m_vkInstance, &physicalDeviceCount, physicalDevices.data());
+
+    printf("Physical devices found\n");
+    for (VkPhysicalDevice physicalDevice : physicalDevices)
+    {
+        VkPhysicalDeviceProperties physicalDeviceProperties;
+        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+        printf(" - %s\n", physicalDeviceProperties.deviceName);
+
+        if (isPhysicalDeviceSuitable(physicalDevice))
+        {
+            printf("  - Device suitable\n");
+            m_vkPhysicalDevice = physicalDevice;
+        }
+    }
+
+    if (m_vkPhysicalDevice == VK_NULL_HANDLE)
+    {
+        throw std::runtime_error("Unable to find a suitable device");
     }
 }

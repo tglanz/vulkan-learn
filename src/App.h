@@ -26,8 +26,9 @@ private:
   };
 
   GLFWwindow *m_window;
-  VkInstance m_vkInstance;
-  VkDebugReportCallbackEXT m_vkDebugReportCallback;
+  VkInstance m_vkInstance = VK_NULL_HANDLE;
+  VkDebugReportCallbackEXT m_vkDebugReportCallback = VK_NULL_HANDLE;
+  VkPhysicalDevice m_vkPhysicalDevice = VK_NULL_HANDLE;
 
   void initWindow();
   void initVulkan();
@@ -37,4 +38,5 @@ private:
   void createVulkanInstance();
   std::vector<const char *> getRequiredExtensions();
   void setupDebugCallback();
+  void pickPhysicalDevice();
 };
