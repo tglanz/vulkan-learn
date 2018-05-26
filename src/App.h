@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include <set>
 #include <cstdio>
 #include <cstring>
 
@@ -37,6 +38,7 @@ private:
   VkPhysicalDevice m_vkPhysicalDevice = VK_NULL_HANDLE;
   VkDevice m_vkDevice = VK_NULL_HANDLE;
   VkQueue m_vkGraphicsQueue = VK_NULL_HANDLE;
+  VkQueue m_vkPresentQueue = VK_NULL_HANDLE;
   VkSurfaceKHR m_vkSurfaceKHR = VK_NULL_HANDLE;
 
   /* Methods */

@@ -233,19 +233,26 @@ void App::createLogicalDevice()
 
     QueueFamilyIndicies queueFamilyInicies = findQueueFamilies(m_vkPhysicalDevice, m_vkSurfaceKHR);
 
-    VkDeviceQueueCreateInfo graphicsDeviceQueueCreateInfo = {};
-    graphicsDeviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    graphicsDeviceQueueCreateInfo.queueCount = 1;
-    graphicsDeviceQueueCreateInfo.queueFamilyIndex = queueFamilyInicies.graphics;
     float queuePriorities = 1.0f;
-    graphicsDeviceQueueCreateInfo.pQueuePriorities = &queuePriorities;
+    
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<int> uniqueQueueFamilyIndicies = { queueFamilyInicies.graphics, queueFamilyInicies.present };
+    for (int uniqueQueueFamilyIndex : uniqueQueueFamilyIndicies)
+    {
+        VkDeviceQueueCreateInfo deviceQueueCreateInfo = {};
+        deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        deviceQueueCreateInfo.queueCount = 1;
+        deviceQueueCreateInfo.queueFamilyIndex = uniqueQueueFamilyIndex;
+        deviceQueueCreateInfo.pQueuePriorities = &queuePriorities;
+        queueCreateInfos.push_back(deviceQueueCreateInfo);
+    }
 
     VkPhysicalDeviceFeatures physicalDeviceFeatures = {};
 
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceCreateInfo.queueCreateInfoCount = 1;
-    deviceCreateInfo.pQueueCreateInfos = &graphicsDeviceQueueCreateInfo;
+    deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
     deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
     deviceCreateInfo.enabledExtensionCount = 0;
 
@@ -265,7 +272,9 @@ void App::createLogicalDevice()
         throw std::runtime_error("Failed to create logical device");
     }
 
+    printf("Getting device queues");
     vkGetDeviceQueue(m_vkDevice, queueFamilyInicies.graphics, 0, &m_vkGraphicsQueue);
+    vkGetDeviceQueue(m_vkDevice, queueFamilyInicies.present, 0, &m_vkPresentQueue);
 
     printf("App::createLogicalDevice - finish\n");
 }
