@@ -11,6 +11,7 @@
 
 #include "VulkanExtensions/DebugReportCallbackEXT.h"
 #include "QueueFamilies.h"
+#include "DeviceExtensions.h"
 
 class App
 {
@@ -24,10 +25,13 @@ private:
   const int HEIGHT = 600;
   const float MAX_QUEUE_PRIORITY = 1.0f;
 
-  const bool m_isEnableValidationLayers = true;
+  const bool ENABLE_VALIDATION_LAYERS = true;
+  const std::vector<const char *> VALIDATION_LAYERS = {
+    "VK_LAYER_LUNARG_standard_validation"
+  };
 
-  const std::vector<const char *> m_validationLayers = {
-      "VK_LAYER_LUNARG_standard_validation"
+  const std::vector<const char *> DEVICE_EXTENSIONS = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
   };
 
   /* Members */

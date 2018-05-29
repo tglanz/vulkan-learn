@@ -1,6 +1,6 @@
 #include "QueueFamilies.h"
 
-QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface)
+QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
     QueueFamilyIndicies queueFamilyIndicies;
     

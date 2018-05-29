@@ -10,5 +10,5 @@ struct QueueFamilyIndicies
     int present = -1;
 };
 
-QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &vkSurface);
+QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR vkSurface);
 bool areAllQueueFamiliesFound(QueueFamilyIndicies &queueFamilyIndicies);
