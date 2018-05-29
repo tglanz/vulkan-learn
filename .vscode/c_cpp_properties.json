@@ -11,7 +11,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/src"
+                "${workspaceFolder}/src",
+                "C:/VulkanSDK/1.1.73.0/Include"
             ],
             "defines": [
                 "_DEBUG",

@@ -1,0 +1,16 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compile",
+            "type": "shell",
+            "command": "g++ -g -m64 -L./lib -LC:/VulkanSDK/1.1.73.0/Lib -I./include -IC:/VulkanSDK/1.1.73.0/Include -o ./bin/vk.exe ./src/VulkanExtensions/*.cpp ./src/*.cpp -lglfw3 -lgdi32 -lvulkan-1",
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            }
+        }
+    ]
+}
